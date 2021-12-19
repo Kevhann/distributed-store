@@ -2,6 +2,9 @@
 
 FROM python:3.9.0
 
+ENV STORAGESERVER_HOST "$STORAGESERVER_HOST"
+ENV STORAGESERVER_PORT "$STORAGESERVER_PORT"
+
 ENV NAMESERVER_HOST "$NAMESERVER_HOST"
 ENV NAMESERVER_PORT "$NAMESERVER_PORT"
 
@@ -12,4 +15,4 @@ RUN pip3 install -r requirements_storageserver.txt
 COPY storageserver .
 EXPOSE 18861
 
-CMD ["sh", "-c", "python3 -u storageserver.py $NAMESERVER_HOST $NAMESERVER_PORT --host=0.0.0.0"]
+CMD ["sh", "-c", "python3 -u storageserver.py ${STORAGESERVER_HOST}:${STORAGESERVER_PORT} ${NAMESERVER_HOST}:${NAMESERVER_PORT} --host=0.0.0.0"]

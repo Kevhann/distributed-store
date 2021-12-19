@@ -19,6 +19,7 @@ style = Style.from_dict(
     }
 )
 
+
 CONN = None
 NAMESERVER_IP = None
 NAMESERVER_PORT = None
@@ -27,11 +28,12 @@ NAMESERVER_PORT = None
 def connect_to_ns(count_retry=1, max_retry=3):
     global CONN
     print(
-        HTML("<orange>Connecting to nameserver...</orange>"),
-        NAMESERVER_IP,
-        NAMESERVER_PORT,
+        HTML(
+            "<orange>Connecting to nameserver at {}:{}</orange>".format(
+                NAMESERVER_IP, NAMESERVER_PORT
+            )
+        )
     )
-    print(NAMESERVER_IP)
     try:
         CONN = rpyc.connect(
             NAMESERVER_IP, NAMESERVER_PORT, config={"allow_all_attrs": True}
@@ -72,14 +74,14 @@ def nameserver_is_responding():
 def insert_in_store(key, value):
     if nameserver_is_responding():
         try:
-            CONN.root.insert(key, value)
+            return CONN.root.insert(key, value)
         except ConnectionRefusedError:
             print(
                 "Connection refused by nameserver while trying to put key {}".format(
                     key
                 )
             )
-    return None
+    return False
 
 
 def get_from_store(key):
@@ -95,7 +97,6 @@ def get_from_store(key):
 
 
 class MainPrompt(Cmd):
-    global CONN
     prompt = " >> "
     intro = "Welcome to distributed store.\n > Type '?' or 'help' to see available commands.\n"
 
@@ -159,8 +160,17 @@ class MainPrompt(Cmd):
 
     def do_insert(self, args):
         [key, value] = self.parse_args("insert", args, 2, 2)
-        insert_in_store(key, value)
-        print("Value inserted successfully")
+        success = insert_in_store(key, value)
+        if success:
+            print(
+                HTML(
+                    "<green>Value {} inserted to {} successfully</green>".format(
+                        value, key
+                    )
+                )
+            )
+        else:
+            print(HTML("<red>Error while inserting value to store</red>"))
 
     def help_insert(self):
         self.print_help("insert [key] [value]", "Insert a key-value pair to the store")
@@ -169,7 +179,10 @@ class MainPrompt(Cmd):
         # TODO: Fix after arg parsing is done
         [key] = self.parse_args("get", args, 1, 1)
         value = get_from_store(key)
-        print("Value {} found in store".format(value))
+        if value is None:
+            print(HTML("<orange>Key {} not found in store</orange>".format(key)))
+        else:
+            print(HTML("<green>Value {} found in store</green>".format(value)))
 
     def help_get(self):
         self.print_help("get [key]", "Get a key-value pair from the store")
@@ -191,14 +204,15 @@ class MainPrompt(Cmd):
 
 
 def main():
+    global NAMESERVER_IP
+    global NAMESERVER_PORT
+
     args = sys.argv
-    print(args)
-    if len(args) < 3:
-        print(HTML("<red>Error</red>: Missing nameserver or hostname and port in args"))
+    if len(args) < 2:
+        print(HTML("<red>Error</red>: Missing nameserver info in args"))
         return 0
-    [host, port] = args[1:3]
-    global CONN
-    global NAMESERVER_IP, NAMESERVER_PORT
+    [host, port] = args[1].split(":")
+
     NAMESERVER_IP = host
     NAMESERVER_PORT = int(port)
 

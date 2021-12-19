@@ -6,10 +6,17 @@ services:
       dockerfile: Dockerfile_storageserver
     ports:
       - "${STORAGESERVER_PORT_1}:${STORAGESERVER_PORT_1}"
+    environment:
+      - STORAGESERVER_PORT=${STORAGESERVER_PORT_1}
+      - STORAGESERVER_HOST=${STORAGESERVER_HOST_1}
+      - NAMESERVER_PORT=${NAMESERVER_PORT}
+      - NAMESERVER_HOST=${NAMESERVER_HOST}
   nameserver:
     build:
       context: ./
       dockerfile: Dockerfile_nameserver
+    environment:
+      - NAMESERVER_PORT=${NAMESERVER_PORT}
     ports:
       - "${NAMESERVER_PORT}:${NAMESERVER_PORT}"
   client:

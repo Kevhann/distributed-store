@@ -12,4 +12,4 @@ RUN pip3 install -r requirements_client.txt
 COPY client .
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "python3 -u client.py $NAMESERVER_HOST $NAMESERVER_PORT --host=0.0.0.0"]
+CMD ["sh", "-c", "python3 -u client.py ${NAMESERVER_HOST}:${NAMESERVER_PORT} --host=0.0.0.0"]

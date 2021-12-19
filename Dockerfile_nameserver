@@ -2,11 +2,13 @@
 
 FROM python:3.9.0
 
+ENV NAMESERVER_PORT "$NAMESERVER_PORT"
+
 WORKDIR /nameserver/
 
 COPY requirements_nameserver.txt requirements_nameserver.txt
 RUN pip3 install -r requirements_nameserver.txt
 COPY nameserver .
-EXPOSE 18860
+EXPOSE ${NAMESERVER_PORT}
 
-CMD ["python3", "-u", "nameserver.py", "--host=0.0.0.0"]
+CMD ["sh" , "-c", "python3 -u nameserver.py ${NAMESERVER_PORT} --host=0.0.0.0"]
