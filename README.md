@@ -16,10 +16,13 @@ To launch all services. Then in another terminal connect to the client with
 docker attach <client container name>
 ```
 
-**For client**: Python3 with these libraries: rpyc, prompt-toolkit, prompt.
+Project can be also run without docker by running the services manually with `python3`. This requires that the following dependencies are installed:
+
+**For client**: Python3 with rpyc, prompt-toolkit, prompt.
 
 **For NameServer**: Python3 with rpyc
-**For StorageServers**: Python3 with rpyc, and redis
+
+**For StorageServers**: Python3 with rpyc and redis
 
 # How to use it?
 

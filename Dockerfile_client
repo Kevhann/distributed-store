@@ -2,11 +2,14 @@
 
 FROM python:3.9.0
 
+ENV NAMESERVER_HOST "$NAMESERVER_HOST"
+ENV NAMESERVER_PORT "$NAMESERVER_PORT"
+
 WORKDIR /client/
 
 COPY requirements_client.txt requirements_client.txt
 RUN pip3 install -r requirements_client.txt
 COPY client .
-EXPOSE 18859
+EXPOSE ${PORT}
 
-CMD ["python3", "-u", "client.py", "--host=0.0.0.0"]
+CMD ["sh", "-c", "python3 -u client.py $NAMESERVER_HOST $NAMESERVER_PORT --host=0.0.0.0"]
