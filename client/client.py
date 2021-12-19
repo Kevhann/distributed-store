@@ -97,8 +97,12 @@ def get_from_store(key):
 
 
 class MainPrompt(Cmd):
-    prompt = " >> "
-    intro = "Welcome to distributed store.\n > Type '?' or 'help' to see available commands.\n"
+    prompt = "[? or 'help'] >> "
+    intro = (
+        "> Welcome to distributed store.\n"
+        "> The store is a key-value store, with only ascii strings supperted for now\n"
+        "> Type '?' or 'help' to see available commands.\n"
+    )
 
     def preloop(self):
         print(HTML("\n------------- <green>Session Started</green> -------------\n"))
@@ -182,7 +186,7 @@ class MainPrompt(Cmd):
         if value is None:
             print(HTML("<orange>Key {} not found in store</orange>".format(key)))
         else:
-            print(HTML("<green>Value {} found in store</green>".format(value)))
+            print(HTML('<green>Value "{}" found in store</green>'.format(value)))
 
     def help_get(self):
         self.print_help("get [key]", "Get a key-value pair from the store")
@@ -193,9 +197,7 @@ class MainPrompt(Cmd):
         else:
             print(
                 HTML(
-                    '"{}" is NOT a valid command! \n > Try <green>help</green> to see available commands.\n'.format(
-                        inp
-                    )
+                    "Invalid command! \n > Type <green>help</green> for command list.\n"
                 )
             )
 

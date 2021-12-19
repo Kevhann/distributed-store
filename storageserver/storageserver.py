@@ -4,11 +4,14 @@ import time
 import sys
 from threading import Thread
 
-store = redis.Redis(host="redis", port=6379)
 
 CONN = None
+STORE = None
+
 NAMESERVER_IP = None
 NAMESERVER_PORT = None
+REDIS_PORT = None
+REDIS_HOST = None
 STORAGESERVER = None
 
 
@@ -16,7 +19,7 @@ def insert(key, value):
     retries = 5
     while True:
         try:
-            return store.set(key, value)
+            return STORE.set(key, value)
         except redis.exceptions.ConnectionError as exc:
             if retries == 0:
                 raise exc
@@ -28,7 +31,7 @@ def getter(key):
     retries = 5
     while True:
         try:
-            return store.get(key)
+            return STORE.get(key).decode("ascii")
         except redis.exceptions.ConnectionError as exc:
             if retries == 0:
                 raise exc
@@ -40,7 +43,7 @@ def delete(key):
     retries = 5
     while True:
         try:
-            return store.delete(key)
+            return STORE.delete(key)
         except redis.exceptions.ConnectionError as exc:
             if retries == 0:
                 raise exc
@@ -115,12 +118,20 @@ class StorageServerService(rpyc.Service):
 
 
 def main():
-    global NAMESERVER_IP, NAMESERVER_PORT, STORAGESERVER
+    global NAMESERVER_IP, NAMESERVER_PORT, STORAGESERVER, REDIS_PORT, REDIS_HOST, STORE
 
     args = sys.argv
     print(args)
-    if len(args) < 3:
-        print("Missing nameserver or storageserver in args")
+    if len(args) < 4:
+        print(
+            (
+                "Missing args!\n"
+                "The program requires the following arguments:\n"
+                "Location of this server as 'host:port'\n"
+                "Location of the nameserver as 'host:port'\n"
+                "Location of the redis instance as 'host:port'\n"
+            )
+        )
         return 0
     STORAGESERVER = args[1]
     [nameserver_host, nameserver_port] = args[2].split(":")
@@ -128,10 +139,16 @@ def main():
     NAMESERVER_IP = nameserver_host
     NAMESERVER_PORT = nameserver_port
 
-    storageserver_port = STORAGESERVER.split(":")[1]
+    [redis_host, redis_port] = args[3].split(":")
+
+    REDIS_HOST = redis_host
+    REDIS_PORT = int(redis_port)
+
+    STORE = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
     from rpyc.utils.server import ThreadedServer
 
+    storageserver_port = STORAGESERVER.split(":")[1]
     t = ThreadedServer(
         StorageServerService(),
         port=storageserver_port,

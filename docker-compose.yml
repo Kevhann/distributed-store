@@ -11,6 +11,8 @@ services:
       - STORAGESERVER_HOST=${STORAGESERVER_HOST_1}
       - NAMESERVER_PORT=${NAMESERVER_PORT}
       - NAMESERVER_HOST=${NAMESERVER_HOST}
+      - REDIS_PORT=${REDIS_PORT_1}
+      - REDIS_HOST=${REDIS_HOST_1}
   nameserver:
     build:
       context: ./
