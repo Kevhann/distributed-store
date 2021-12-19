@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1
+
+FROM python:3.9.0
+
+WORKDIR /storageserver/
+
+COPY requirements_storageserver.txt requirements_storageserver.txt
+RUN pip3 install -r requirements_storageserver.txt
+COPY storageserver .
+EXPOSE 18861
+
+CMD ["python3", "-u", "storageserver.py", "--host=0.0.0.0"]

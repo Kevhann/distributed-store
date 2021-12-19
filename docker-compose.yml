@@ -1,0 +1,31 @@
+version: "3"
+services:
+  storageserver:
+    image: distributed-store-client-asd:saddest
+    build:
+      context: ./
+      dockerfile: Dockerfile_storageserver
+    ports:
+      - "18861:18861"
+    # volumes:
+    #   - ./storageserver:/data
+  nameserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile_nameserver
+    ports:
+      - "18860:18860"
+    # volumes:
+    #   - ./nameserver:/data
+  client:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./
+      dockerfile: Dockerfile_client
+    ports:
+      - "18859:18859"
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"

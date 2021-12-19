@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1
+
+FROM python:3.9.0
+
+WORKDIR /client/
+
+COPY requirements_client.txt requirements_client.txt
+RUN pip3 install -r requirements_client.txt
+COPY client .
+EXPOSE 18859
+
+CMD ["python3", "-u", "client.py", "--host=0.0.0.0"]

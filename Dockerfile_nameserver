@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1
+
+FROM python:3.9.0
+
+WORKDIR /nameserver/
+
+COPY requirements_nameserver.txt requirements_nameserver.txt
+RUN pip3 install -r requirements_nameserver.txt
+COPY nameserver .
+EXPOSE 18860
+
+CMD ["python3", "-u", "nameserver.py", "--host=0.0.0.0"]
