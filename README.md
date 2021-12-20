@@ -26,6 +26,13 @@ Project can be also run without docker by running the services manually with `py
 
 **For StorageServers**: Python3 with rpyc and redis
 
+Then the services can be manually started (nameserver first). The services need to know where each other are via command line arguments:
+TODO: finish this
+
+```
+python3 sotrageserver.py nameserver-host:port names-host:port
+```
+
 # How to use it?
 
 Once you run the client script and are connected to the nameserver. Simply try these for usage help:
@@ -34,13 +41,23 @@ Once you run the client script and are connected to the nameserver. Simply try t
 
 # Architecture
 
+![](./documentation/structure.drawio.png)
+
 Project consists of four different services: **client**, **nameserver**, **storageserver** and **redis**. Client has the user interface, and communicates with nameserver. Nameserver is the orchestrator between the client and the (possibly) multiple storageservers. Storageservers handle the storing each using their personal redis instance. Communication betewen the services is done entirely by remote procedure calls, there is no shared memory or other communication avenue.
 
-The idea is that the nameserver is a known entity to which clients and storageservers can connect at will. I did the choice to have it static instead of having some election process just for simplicity.
+The idea is that the nameserver is a known entity to which clients and storageservers can connect at will. I did the choice to have it static instead of having some election process just for simplicity. The distribution is focused entirely on the storageservers and the replicated data store they access.
+
+The connections between the client and the nameserver is established at startup. Likewise the storageservers connect to the nameserver at startup, and then keep periodically polling the nameserver to announce that they are still alive. The nameserver maintains a list of alive storageservers in memory. At the moment there is no persistency on the nameserver side, and it has no memory of storageservers that it is no longer connected to.
 
 # Communication Protocols - RPyC
 
-RPyC is a popular Python library used for remote procedure calls. All communications between Naming Server, Storage Servers, and the Client in our application is done using RPyC as it is simple to use and allows us to call remote methods and attributes in a local context.
+RPyC is a popular Python library used for remote procedure calls. All communications between Naming Server, Storage Servers, and the Client in our application is done using RPyC as it is simple to use and allows us to call remote methods and attributes in a local context. There is no real practical reason for choosing this other than it being relatively simple to use. The real-world practicality or performance was not of concern, it is just taking care of communication between nodes. Thse specifics of the messaging protocol is not important for the overall architecture, as long as it's message-based.
+
+# Backlog
+
+Smaller stuff that I will hopefully be able to implement
+
+- list all connected services and some data about them
 
 # Planned features
 
@@ -54,3 +71,4 @@ These are features that I would like to have, and might add if there is time. No
 - Better/more storage options
 - Make setup to run on VMs or separate physical machines
 - If ever achieve many of these, then have option to toggle between modes and kill/spawn nodes at will
+- Client to reconnect to nameserver, and in general be more resilient and not crash easily

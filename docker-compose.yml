@@ -1,6 +1,11 @@
 version: "3"
 services:
-  storageserver:
+  redis-1:
+    image: "redis:alpine"
+    command: --port ${REDIS_PORT_1}
+    ports:
+      - "${REDIS_PORT_1}:${REDIS_PORT_1}"
+  storageserver-1:
     build:
       context: ./
       dockerfile: Dockerfile_storageserver
@@ -13,6 +18,44 @@ services:
       - NAMESERVER_HOST=${NAMESERVER_HOST}
       - REDIS_PORT=${REDIS_PORT_1}
       - REDIS_HOST=${REDIS_HOST_1}
+
+  # redis-2:
+  #   image: "redis:alpine"
+  #   command: --port ${REDIS_PORT_2}
+  #   ports:
+  #     - "${REDIS_PORT_2}:${REDIS_PORT_2}"
+  # storageserver-2:
+  #   build:
+  #     context: ./
+  #     dockerfile: Dockerfile_storageserver
+  #   ports:
+  #     - "${STORAGESERVER_PORT_2}:${STORAGESERVER_PORT_2}"
+  #   environment:
+  #     - STORAGESERVER_PORT=${STORAGESERVER_PORT_2}
+  #     - STORAGESERVER_HOST=${STORAGESERVER_HOST_2}
+  #     - NAMESERVER_PORT=${NAMESERVER_PORT}
+  #     - NAMESERVER_HOST=${NAMESERVER_HOST}
+  #     - REDIS_PORT=${REDIS_PORT_2}
+  #     - REDIS_HOST=${REDIS_HOST_2}
+
+  # redis-3:
+  #   image: "redis:alpine"
+  #   command: --port ${REDIS_PORT_3}
+  #   ports:
+  #     - "${REDIS_PORT_3}:${REDIS_PORT_3}"
+  # storageserver-3:
+  #   build:
+  #     context: ./
+  #     dockerfile: Dockerfile_storageserver
+  #   ports:
+  #     - "${STORAGESERVER_PORT_3}:${STORAGESERVER_PORT_3}"
+  #   environment:
+  #     - STORAGESERVER_PORT=${STORAGESERVER_PORT_3}
+  #     - STORAGESERVER_HOST=${STORAGESERVER_HOST_3}
+  #     - NAMESERVER_PORT=${NAMESERVER_PORT}
+  #     - NAMESERVER_HOST=${NAMESERVER_HOST}
+  #     - REDIS_PORT=${REDIS_PORT_3}
+  #     - REDIS_HOST=${REDIS_HOST_3}
   nameserver:
     build:
       context: ./
@@ -32,7 +75,3 @@ services:
       - NAMESERVER_HOST=${NAMESERVER_HOST}
     ports:
       - "${CLIENT_PORT}:${CLIENT_PORT}"
-  redis:
-    image: "redis:alpine"
-    ports:
-      - "${REDIS_PORT_1}:${REDIS_PORT_1}"

@@ -52,12 +52,6 @@ class NameServerService(rpyc.Service):
             print("Storage server {} joined!".format(server))
         self.server_list[server] = 0
 
-    # def refresh_storage_server_list(self):
-    #     # Load Storage Server Blocks Map
-    #     with open("server_list.json", "r") as input_file:
-    #         self.server_list = {server: 0 for server in json.load(input_file)}
-    #     print("Server addresses reset.")
-
     def exposed_get_alive_servers(self, max_needed=-1):
         out = []
         i = 0
@@ -71,7 +65,7 @@ class NameServerService(rpyc.Service):
     # check is servers are alive
     def check_aliveness(self, count):
         count += 1
-        for server in self.server_list:
+        for server in list(self.server_list):
             if self.server_list[server] > SERVER_TIMEOUT_S:
                 self.server_list.pop(server)
                 print("Server {} has died.".format(server))

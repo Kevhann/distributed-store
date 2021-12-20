@@ -16,6 +16,6 @@ WORKDIR /storageserver/
 COPY requirements_storageserver.txt requirements_storageserver.txt
 RUN pip3 install -r requirements_storageserver.txt
 COPY storageserver .
-EXPOSE 18861
+EXPOSE ${STORAGESERVER_PORT}
 
 CMD ["sh", "-c", "python3 -u storageserver.py ${STORAGESERVER_HOST}:${STORAGESERVER_PORT} ${NAMESERVER_HOST}:${NAMESERVER_PORT} ${REDIS_HOST}:${REDIS_PORT} --host=0.0.0.0"]
