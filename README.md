@@ -26,22 +26,25 @@ Project can be also run without docker by running the services manually with `py
 
 **For StorageServers**: Python3 with rpyc and redis
 
-Then the services can be manually started (nameserver first). The services need to know where each other are via command line arguments:
-TODO: finish this
-
-```
-python3 sotrageserver.py nameserver-host:port names-host:port
-```
+Then the services can be manually started (nameserver first). The services need to know where each other are via command line arguments. No reason to do this, just use the docker-compose scripts instead.
 
 # How to use it?
 
-Once you run the client script and are connected to the nameserver. Simply try these for usage help:
+Once you run the script and are attached to the client. Type `help` for help, but the commands are very simple and self evident:
 
-- type `help` and hit enter to see all available commands:
+```
+insert <key> <value>
+```
+
+```
+get <key>
+```
+
+For an inside look, type `dump` to see the keys of all stores.
 
 # Architecture
 
-![](./documentation/structure.drawio.png)
+![](./documentation/structure.png)
 
 Project consists of four different services: **client**, **nameserver**, **storageserver** and **redis**. Client has the user interface, and communicates with nameserver. Nameserver is the orchestrator between the client and the (possibly) multiple storageservers. Storageservers handle the storing each using their personal redis instance. Communication betewen the services is done entirely by remote procedure calls, there is no shared memory or other communication avenue.
 
