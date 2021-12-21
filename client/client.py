@@ -96,6 +96,14 @@ def get_from_store(key):
             )
 
 
+def get_store_dump():
+    if nameserver_is_responding():
+        try:
+            return CONN.root.get_store_dumps()
+        except ConnectionRefusedError:
+            print("Connection refused by nameserver while trying to get store dumps")
+
+
 class MainPrompt(Cmd):
     prompt = "[? or 'help'] >> "
     intro = (
@@ -187,6 +195,15 @@ class MainPrompt(Cmd):
             print(HTML("<orange>Key {} not found in store</orange>".format(key)))
         else:
             print(HTML('<green>Value "{}" found in store</green>'.format(value)))
+
+    def do_dump(self, args):
+        # TODO: Fix after arg parsing is done
+        self.parse_args("dump", args, 0, 0)
+        value = get_store_dump()
+        if value is None:
+            print(HTML("<red>Error while getting dump from store</red>"))
+        else:
+            print(HTML('<green>Dump "{}"</green>'.format(value)))
 
     def help_get(self):
         self.print_help("get [key]", "Get a key-value pair from the store")

@@ -14,41 +14,62 @@ REDIS_PORT = None
 REDIS_HOST = None
 STORAGESERVER = None
 
+VER_KEY = "__VERSION_KEY__"
+LOG_KEY = "__LOG_KEY__"
+STORE_VERSION = 0
+
+
+def dump_store_keys():
+    return STORE.keys()
+
+
+def log_store_action(operation):
+    global STORE_VERSION
+    STORE.rpush(LOG_KEY, operation)
+    STORE_VERSION = STORE.incr(VER_KEY)
+    return STORE_VERSION
+
+
+def get_version_number():
+    version = STORE.get(VER_KEY)
+    if version is None:
+        return 0
+    return version
+
+
+def set_version_number():
+    global STORE_VERSION
+    STORE_VERSION = get_version_number()
+
+
+def get_operations(offset=0):
+    result = STORE.lrange(LOG_KEY, offset, -1)
+    return result
+
+
+def apply_operations(ops):
+    for operation in ops:
+        print(operation)
+        operation = operation.decode("ascii")
+        op = operation.split(" ")
+
+        if op[0] == "insert":
+            insert(op[1], op[2])
+
 
 def insert(key, value):
-    retries = 5
-    while True:
-        try:
-            return STORE.set(key, value)
-        except redis.exceptions.ConnectionError as exc:
-            if retries == 0:
-                raise exc
-            retries -= 1
-            time.sleep(0.5)
+    STORE.set(key, value)
+    return log_store_action("insert {} {}".format(key, value))
 
 
 def getter(key):
-    retries = 5
-    while True:
-        try:
-            return STORE.get(key).decode("ascii")
-        except redis.exceptions.ConnectionError as exc:
-            if retries == 0:
-                raise exc
-            retries -= 1
-            time.sleep(0.5)
+    result = STORE.get(key).decode("ascii")
+    return result
 
 
 def delete(key):
-    retries = 5
-    while True:
-        try:
-            return STORE.delete(key)
-        except redis.exceptions.ConnectionError as exc:
-            if retries == 0:
-                raise exc
-            retries -= 1
-            time.sleep(0.5)
+    STORE.delete(key)
+    return log_store_action("delete {}".format(key))
 
 
 def connect_to_nameserver(count_retry=1, max_retry=3):
@@ -78,11 +99,30 @@ def connect_to_nameserver(count_retry=1, max_retry=3):
         return True
 
 
+def connect_to_peer(server, count_retry=1, max_retry=3):
+    [peer_ip, peer_port] = server.split(":")
+    print("Connecting to peer at {}:{}".format(peer_ip, peer_port))
+    try:
+        return rpyc.connect(peer_ip, peer_port, config={"allow_all_attrs": True})
+    except ConnectionError:
+        pass
+
+    print("Connection couldn't be established.\n")
+    time.sleep(1)
+    if count_retry <= max_retry:
+        print("Attempt {} out of {}".format(count_retry, max_retry))
+        return connect_to_peer(server, count_retry + 1, max_retry)
+    else:
+        print("Maximum allowed attempts made. Closing the application now!\n")
+        return False
+
+
 class StorageServerService(rpyc.Service):
     def __init__(self):
         connect_to_nameserver()
         thread = Thread(target=self.poll_nameserver, args=(0,), daemon=True)
         thread.start()
+        set_version_number()
 
     def on_connect(self, conn):
         sock = conn._channel.stream.sock
@@ -95,26 +135,49 @@ class StorageServerService(rpyc.Service):
     # poll nameserver to keep the connection alive
     def poll_nameserver(self, count):
         count += 1
-        CONN.root.storage_enlist(STORAGESERVER)
-
+        CONN.root.storage_enlist(STORAGESERVER, STORE_VERSION)
         # sleep for this time
         time.sleep(1)
         # repeat the process again
         self.poll_nameserver(count)
 
+    def exposed_update_store(self, version_from, version_to, peers):
+        print(
+            "Updating self from version {} to {} using peers {}".format(
+                version_from, version_to, peers
+            )
+        )
+
+        conn = connect_to_peer(peers[0])
+        ops = conn.root.get_store_log(version_from, version_to)
+        print("Applying {} operations".format(len(ops)))
+        apply_operations(ops)
+
+    def exposed_get_store_log(self, version_from, version_to):
+        if version_to != STORE_VERSION:
+            print(
+                "Version mismatch! Asked for version {}, current store version is {}".format(
+                    version_to, STORE_VERSION
+                )
+            )
+            return []
+        return get_operations(version_from)
+
     def exposed_insert(self, key, value):
-        insert(key, value)
+        result = insert(key, value)
         print('Put value "{}" to key {}.'.format(value, key))
+        return result
 
     def exposed_get(self, key):
-        print("wanna get stuff from {}".format(key))
         value = getter(key)
-        print("got stuff from {}".format(key))
-
         if value is None:
             return print("Key not in store")
         print("fetched value {} for key {}".format(value, key))
         return value
+
+    def exposed_dump_keys(self):
+        print("Dumping all keys in store")
+        return dump_store_keys()
 
 
 def main():

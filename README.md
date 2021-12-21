@@ -57,6 +57,7 @@ RPyC is a popular Python library used for remote procedure calls. All communicat
 
 Smaller stuff that I will hopefully be able to implement
 
+- Return ok from set/del etc. operations after all stores have signed off on it
 - list all connected services and some data about them
 
 # Planned features
