@@ -26,7 +26,7 @@ def dump_store_keys():
 def log_store_action(operation):
     global STORE_VERSION
     STORE.rpush(LOG_KEY, operation)
-    STORE_VERSION = STORE.incr(VER_KEY)
+    STORE_VERSION = int(STORE.incr(VER_KEY))
     return STORE_VERSION
 
 
@@ -34,7 +34,7 @@ def get_version_number():
     version = STORE.get(VER_KEY)
     if version is None:
         return 0
-    return version
+    return int(version)
 
 
 def set_version_number():
@@ -50,7 +50,6 @@ def get_operations(offset=0):
 def apply_operations(ops):
     for operation in ops:
         print(operation)
-        operation = operation.decode("ascii")
         op = operation.split(" ")
 
         if op[0] == "insert":
@@ -63,8 +62,7 @@ def insert(key, value):
 
 
 def getter(key):
-    result = STORE.get(key).decode("ascii")
-    return result
+    return STORE.get(key)
 
 
 def delete(key):
@@ -207,7 +205,7 @@ def main():
     REDIS_HOST = redis_host
     REDIS_PORT = int(redis_port)
 
-    STORE = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
+    STORE = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
     from rpyc.utils.server import ThreadedServer
 
