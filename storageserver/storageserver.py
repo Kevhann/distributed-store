@@ -25,7 +25,7 @@ def dump_store_keys():
 
 def log_store_action(operation):
     global STORE_VERSION
-    STORE.lpush(LOG_KEY, operation)
+    STORE.rpush(LOG_KEY, operation)
     STORE_VERSION = STORE.incr(VER_KEY)
     return STORE_VERSION
 
